@@ -1,0 +1,1 @@
+// Logic moved to index.html to support local offline execution without a build step.
