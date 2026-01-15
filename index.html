@@ -10,10 +10,18 @@
             --text-color: #ffffff;
             --neon-blue: #00f3ff;
             --neon-pink: #ff00aa;
-            --glass-bg: rgba(20, 20, 22, 0.95); /* Increased opacity slightly */
-            --glass-border: rgba(255, 255, 255, 0.08);
+            /* Enhanced Glass Variables */
+            --glass-bg: rgba(25, 25, 30, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-highlight: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
             --font-jp: "Noto Sans JP", sans-serif;
             --font-mono: "JetBrains Mono", monospace;
+        }
+
+        /* Fix alignment issues globally */
+        *, *::before, *::after {
+            box-sizing: border-box;
         }
 
         body {
@@ -27,6 +35,7 @@
             user-select: none;
             display: flex;
             flex-direction: column;
+            background: radial-gradient(circle at 50% 120%, #1a1a2e 0%, #050505 60%);
         }
 
         /* --- Utilities --- */
@@ -46,8 +55,10 @@
         .glass {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid var(--glass-highlight);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--glass-shadow);
         }
 
         /* --- Header --- */
@@ -76,13 +87,13 @@
         }
 
         .mode-btn.active {
-            background: white;
+            background: rgba(255, 255, 255, 0.9);
             color: black;
-            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            box-shadow: 0 0 15px rgba(255,255,255,0.3);
         }
 
         .mode-btn:not(.active):hover {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15);
             color: white;
         }
 
@@ -97,7 +108,7 @@
 
         .grid-container {
             display: flex;
-            flex-direction: row-reverse; /* Japanese vertical text order usually goes Right to Left for columns */
+            flex-direction: row-reverse;
             gap: 1.25rem;
         }
 
@@ -115,101 +126,137 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
+            backdrop-filter: blur(0px); /* Clean look */
+            
+            /* -- Local Glow Logic -- */
+            --x: 50%; 
+            --y: 50%;
+            
+            /* 
+               Default State:
+               1. padding-box: Dark semi-transparent background. 
+                  CHANGED: Increased opacity to 0.75 (from 0.4) for better readability.
+               2. border-box: A static, subtle border gradient.
+            */
+            border: 1px solid transparent; 
+            background: 
+                /* Inner content background - Darker/More Opaque for readability */
+                linear-gradient(rgba(25, 25, 30, 0.75), rgba(25, 25, 30, 0.75)) padding-box,
+                /* Border background - Static faint line */
+                linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08)) border-box;
+
+            /* Smooth transformation, but instant background change on hover to avoid lag */
+            transition: transform 0.2s ease-out;
         }
 
-        .cell:hover {
-            background: rgba(255,255,255,0.05);
-            border-color: rgba(255,255,255,0.2);
-            transform: scale(1.05);
+        /* Special style for empty cells to maintain exact grid sizing */
+        .cell.empty-cell {
+            opacity: 0;
+            pointer-events: none;
+            border-color: transparent; 
+            background: transparent;
+            box-shadow: none;
         }
 
-        .cell.active {
-            background: rgba(255,255,255,0.1);
-            border-color: rgba(0, 243, 255, 0.4);
-            transform: scale(1.05);
-            z-index: 10;
+        .cell:not(.empty-cell):hover {
+            /* Reduced scale from 1.08 to 1.02 for a subtle, professional feel */
+            transform: scale(1.02); 
+            
+            /* 
+               Hover State:
+               Replace the static border-box background with the radial gradient tracking mouse.
+            */
+            background: 
+                linear-gradient(rgba(30, 30, 35, 0.8), rgba(30, 30, 35, 0.8)) padding-box,
+                radial-gradient(80px circle at var(--x) var(--y), rgba(255, 255, 255, 0.6), transparent 100%) border-box;
+        }
+
+        /* Placeholder state when the cell is "open" */
+        .cell.placeholder {
+            opacity: 0; 
+            pointer-events: none;
         }
 
         .cell-main {
-            font-size: 1.5rem;
+            font-size: 1.5rem; 
             font-weight: 300;
-            color: #ccc;
+            /* CHANGED: Brighter color for readability */
+            color: rgba(255, 255, 255, 0.9);
             line-height: 1;
-            margin-bottom: 2px;
-            transition: color 0.3s;
-        }
-
-        .cell.active .cell-main {
-            color: var(--neon-blue);
-            text-shadow: 0 0 8px rgba(0, 243, 255, 0.3);
+            position: absolute;
+            top: 40%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            text-align: center;
+            z-index: 2; 
         }
 
         .cell-sub {
             font-size: 9px;
             font-family: var(--font-mono);
             font-weight: bold;
-            color: #555;
+            /* CHANGED: Brighter color for readability */
+            color: rgba(255, 255, 255, 0.5);
             text-transform: uppercase;
             letter-spacing: 1px;
+            position: absolute;
+            bottom: 6px;
+            width: 100%;
+            text-align: center;
+            z-index: 2;
         }
 
-        .cell.active .cell-sub {
-            color: rgba(0, 243, 255, 0.7);
-        }
-
-        /* --- Info Panel --- */
+        /* --- Info Panel (Hero Animation) --- */
         #info-panel {
             position: fixed;
-            /* Changed from bottom: 2.5rem to bottom: 15% to avoid taskbar occlusion */
-            bottom: 15%; 
-            left: 0;
-            right: 0;
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            transform: translateY(20px);
-            opacity: 0;
-            pointer-events: none;
-            z-index: 40;
-            display: flex;
-            justify-content: center;
-        }
-
-        #info-panel.show {
-            transform: translateY(0);
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .panel-card {
-            width: 90%;
-            max-width: 50rem;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 1.5rem;
-            padding: 2.5rem 3rem;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-            position: relative;
+            z-index: 200;
+            display: none; 
             overflow: hidden;
-            min-height: 180px;
+            
+            /* Background matches main interface */
+            background: rgba(10, 10, 12, 0.85); 
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+            
+            /* Smoother morph animation */
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Content inside the panel */
+        #panel-content {
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             box-sizing: border-box;
+            padding: 2.5rem 3rem;
+            position: relative;
+        }
+
+        /* When panel is fully open, show content */
+        #info-panel.open #panel-content {
+            opacity: 1;
+            transition-delay: 0.1s; 
         }
 
         .panel-bg-glow {
             position: absolute;
             inset: 0;
-            background: linear-gradient(90deg, rgba(0,243,255,0.05), transparent, rgba(255,0,170,0.05));
+            background: radial-gradient(circle at 50% 0%, rgba(0, 243, 255, 0.05), transparent 70%);
             pointer-events: none;
         }
 
-        /* --- Example Button (Inside Panel) --- */
-        .btn-example {
+        /* --- Button (Inside Panel) --- */
+        .btn-action {
             position: absolute;
             top: 1.5rem;
             right: 1.5rem;
@@ -231,28 +278,37 @@
             z-index: 50;
         }
 
-        .btn-example:hover {
+        .btn-action:hover {
             border-color: var(--neon-pink);
             color: var(--neon-pink);
             background: rgba(255, 0, 170, 0.1);
             box-shadow: 0 0 15px rgba(255, 0, 170, 0.3);
+            transform: rotate(90deg); /* Slight rotation for effect */
+        }
+
+        .btn-action svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
         }
 
         /* Character Details View */
         .char-view {
             display: flex;
-            align-items: center;
+            /* CHANGED: Align start to fix title alignment issue when content sizes differ */
+            align-items: flex-start;
             justify-content: center; 
             gap: 3rem;
             width: 100%;
-            animation: fadeIn 0.5s ease-out;
         }
 
         .char-group {
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: flex-start; /* Ensures labels stick to top */
             min-width: 80px;
+            height: 120px; /* Fixed height to ensure layout stability */
         }
 
         .char-label {
@@ -261,13 +317,16 @@
             letter-spacing: 2px;
             margin-bottom: 0.75rem;
             color: #666;
+            height: 15px; /* Fixed height for label */
         }
 
         .char-val {
             font-size: 4rem;
-            font-weight: 100;
+            font-weight: 400; 
             color: white;
             line-height: 1;
+            margin-top: auto;
+            margin-bottom: auto;
         }
 
         .divider {
@@ -275,6 +334,7 @@
             height: 5rem;
             background: rgba(255,255,255,0.1);
             margin: 0 1rem;
+            align-self: center; /* Center divider vertically relative to the container */
         }
 
         /* Vocab View */
@@ -282,7 +342,6 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            animation: fadeIn 0.5s ease-out;
         }
         
         .vocab-header {
@@ -319,32 +378,34 @@
             line-height: 1.5;
         }
 
-        /* Loading & Error */
-        .loading-view, .error-view {
+        /* Error View */
+        .error-view {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 1.25rem;
-            animation: fadeIn 0.3s;
-        }
-        
-        .pulse-bar {
-            width: 100px;
-            height: 4px;
-            background: #222;
-            border-radius: 99px;
-            overflow: hidden;
-        }
-        .pulse-fill {
-            height: 100%;
-            width: 50%;
-            background: var(--neon-pink);
-            animation: slide 1s infinite ease-in-out alternate;
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 50% { opacity: 0.5; } }
-        @keyframes slide { from { transform: translateX(-50%); } to { transform: translateX(150%); } }
+        /* Footer Watermark */
+        .footer-watermark {
+            position: fixed;
+            bottom: 3rem; /* Lifted up to avoid Windows Taskbar */
+            left: 2rem;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            z-index: 50;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            pointer-events: auto; /* Enable hover interaction */
+        }
+
+        .footer-watermark:hover {
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue);
+            opacity: 1;
+        }
 
         /* Mobile tweaks */
         @media (max-width: 768px) {
@@ -354,20 +415,20 @@
             .char-val { font-size: 2.5rem; }
             header { padding: 1rem; }
             
-            .panel-card {
+            #panel-content {
                 padding: 1.5rem;
-                width: 94%;
-                min-height: 140px;
             }
             .char-view { gap: 1rem; }
             .divider { margin: 0; height: 3rem; }
             .char-label { font-size: 9px; letter-spacing: 1px; }
-            .char-group { min-width: auto; }
+            .char-group { min-width: auto; height: auto; }
             
             .vocab-header { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
             .vocab-meaning { text-align: left; margin-left: 0; font-size: 1rem; }
             .vocab-word { font-size: 2rem; }
             .vocab-reading { font-size: 1rem; }
+            
+            .footer-watermark { bottom: 1rem; left: 1rem; font-size: 10px; }
         }
     </style>
     
@@ -399,12 +460,14 @@
         </div>
     </main>
 
+    <!-- Footer Watermark -->
+    <div class="footer-watermark">@honru</div>
+
+    <!-- The animating panel -->
     <div id="info-panel">
-        <div class="panel-card">
-            <div class="panel-bg-glow"></div>
-            <div id="panel-content" style="width: 100%;">
-                <!-- Content injected by JS -->
-            </div>
+        <div class="panel-bg-glow"></div>
+        <div id="panel-content">
+            <!-- Content injected by JS -->
         </div>
     </div>
 
@@ -415,7 +478,7 @@
         const empty = (id) => ({ id, type: 'empty' });
 
         const GOJUON_DATA = [
-            // A Row
+            // A Row (Columns in JS logic)
             c('a', 'あ', 'ア'), c('i', 'い', 'イ'), c('u', 'う', 'ウ'), c('e', 'え', 'エ'), c('o', 'お', 'オ'),
             // Ka Row
             c('ka', 'か', 'カ'), c('ki', 'き', 'キ'), c('ku', 'く', 'ク'), c('ke', 'け', 'ケ'), c('ko', 'こ', 'コ'),
@@ -439,122 +502,122 @@
             c('n', 'ん', 'ン')
         ];
 
-        // --- LOCAL DATABASE (Offline Mode) ---
-        const VOCAB_DB = {
+        // --- 2. EXPANDED OFFLINE DATABASE (2-3 items per char) ---
+        const DEFAULT_VOCAB = {
             'a': [
                 { word: '雨', reading: 'あめ (ame)', meaning: 'Rain', example: 'あめ が ふっている。 (It is raining.)' },
-                { word: '朝', reading: 'あさ (asa)', meaning: 'Morning', example: 'あさごはん を たべる。 (I eat breakfast.)' },
-                { word: '愛', reading: 'あい (ai)', meaning: 'Love', example: 'あい は たいせつ です。 (Love is important.)' }
+                { word: '愛', reading: 'あい (ai)', meaning: 'Love', example: 'あい は たいせつ です。 (Love is important.)' },
+                { word: '朝', reading: 'あさ (asa)', meaning: 'Morning', example: 'あさ はやく おきる。 (Wake up early in the morning.)' }
             ],
             'i': [
                 { word: '犬', reading: 'いぬ (inu)', meaning: 'Dog', example: 'いぬ が います。 (There is a dog.)' },
-                { word: '家', reading: 'いえ (ie)', meaning: 'House', example: 'いえ に かえる。 (Go home.)' },
-                { word: '今', reading: 'いま (ima)', meaning: 'Now', example: 'いま 何時 ですか？ (What time is it now?)' }
+                { word: '今', reading: 'いま (ima)', meaning: 'Now', example: 'いま なじ ですか。 (What time is it now?)' },
+                { word: '忙しい', reading: 'いそがしい (isogashii)', meaning: 'Busy', example: 'きょう は いそがしい。 (I am busy today.)' }
             ],
             'u': [
-                { word: '海', reading: 'うみ (umi)', meaning: 'Sea/Ocean', example: 'うみ に いきたい。 (I want to go to the sea.)' },
+                { word: '海', reading: 'うみ (umi)', meaning: 'Sea', example: 'うみ に いきたい。 (I want to go to the sea.)' },
                 { word: '歌', reading: 'うた (uta)', meaning: 'Song', example: 'うた を うたう。 (Sing a song.)' },
-                { word: '上', reading: 'うえ (ue)', meaning: 'Above/Up', example: 'つくえ の うえ。 (On the desk.)' }
+                { word: '後ろ', reading: 'うしろ (ushiro)', meaning: 'Behind', example: 'うしろ を みる。 (Look behind.)' }
             ],
             'e': [
                 { word: '駅', reading: 'えき (eki)', meaning: 'Station', example: 'えき で まつ。 (Wait at the station.)' },
-                { word: '鉛筆', reading: 'えんぴつ (enpitsu)', meaning: 'Pencil', example: 'えんぴつ で かく。 (Write with a pencil.)' },
-                { word: '絵', reading: 'え (e)', meaning: 'Picture', example: 'え を みる。 (Look at the picture.)' }
+                { word: '映画', reading: 'えいが (eiga)', meaning: 'Movie', example: 'えいが を みる。 (Watch a movie.)' },
+                { word: '鉛筆', reading: 'えんぴつ (enpitsu)', meaning: 'Pencil', example: 'えんぴつ で かく。 (Write with a pencil.)' }
             ],
             'o': [
                 { word: '音楽', reading: 'おんがく (ongaku)', meaning: 'Music', example: 'おんがく を きく。 (Listen to music.)' },
-                { word: 'お金', reading: 'おかね (okane)', meaning: 'Money', example: 'おかね が ない。 (I have no money.)' },
-                { word: 'お茶', reading: 'おちゃ (ocha)', meaning: 'Tea', example: 'おちゃ を のむ。 (Drink tea.)' }
+                { word: '大きい', reading: 'おおきい (ookii)', meaning: 'Big', example: 'おおきい いえ。 (A big house.)' },
+                { word: 'お金', reading: 'おかね (okane)', meaning: 'Money', example: 'おかね が ない。 (I have no money.)' }
             ],
             'ka': [
                 { word: '川', reading: 'かわ (kawa)', meaning: 'River', example: 'かわ で およぐ。 (Swim in the river.)' },
                 { word: '傘', reading: 'かさ (kasa)', meaning: 'Umbrella', example: 'かさ を さす。 (Open an umbrella.)' },
-                { word: '家族', reading: 'かぞく (kazoku)', meaning: 'Family', example: 'かぞく は 元気 です。 (My family is well.)' }
+                { word: '家族', reading: 'かぞく (kazoku)', meaning: 'Family', example: 'かぞく は よにん です。 (My family has four members.)' }
             ],
             'ki': [
                 { word: '木', reading: 'き (ki)', meaning: 'Tree', example: 'おおきな き。 (A big tree.)' },
                 { word: '昨日', reading: 'きのう (kinou)', meaning: 'Yesterday', example: 'きのう は あめ でした。 (It rained yesterday.)' },
-                { word: '切符', reading: 'きっぷ (kippu)', meaning: 'Ticket', example: 'きっぷ を かう。 (Buy a ticket.)' }
+                { word: '綺麗', reading: 'きれい (kirei)', meaning: 'Beautiful', example: 'はな が きれい です。 (The flowers are beautiful.)' }
             ],
             'ku': [
                 { word: '車', reading: 'くるま (kuruma)', meaning: 'Car', example: 'くるま を うんてん する。 (Drive a car.)' },
                 { word: '靴', reading: 'くつ (kutsu)', meaning: 'Shoes', example: 'くつ を はく。 (Put on shoes.)' },
-                { word: '国', reading: 'くに (kuni)', meaning: 'Country', example: 'どの くに から きましたか？ (Which country are you from?)' }
+                { word: '雲', reading: 'くも (kumo)', meaning: 'Cloud', example: 'しろい くも。 (White clouds.)' }
             ],
             'ke': [
                 { word: '警察', reading: 'けいさつ (keisatsu)', meaning: 'Police', example: 'けいさつ を よぶ。 (Call the police.)' },
-                { word: '結婚', reading: 'けっこん (kekkon)', meaning: 'Marriage', example: 'けっこん します。 (Getting married.)' },
-                { word: '景色', reading: 'けしき (keshiki)', meaning: 'Scenery', example: 'いい けしき です。 (It is good scenery.)' }
+                { word: '結婚', reading: 'けっこん (kekkon)', meaning: 'Marriage', example: 'けっこん します。 (I am getting married.)' },
+                { word: '景色', reading: 'けしき (keshiki)', meaning: 'Scenery', example: 'けしき が いい。 (The scenery is good.)' }
             ],
             'ko': [
+                { word: '心', reading: 'こころ (kokoro)', meaning: 'Heart', example: 'こころ が あたたかい。 (Warm hearted.)' },
                 { word: '子供', reading: 'こども (kodomo)', meaning: 'Child', example: 'こども が あそぶ。 (Children are playing.)' },
-                { word: '声', reading: 'こえ (koe)', meaning: 'Voice', example: 'おおきな こえ。 (Big voice.)' },
-                { word: '心', reading: 'こころ (kokoro)', meaning: 'Heart', example: 'こころ が あたたかい。 (Warm hearted.)' }
+                { word: '声', reading: 'こえ (koe)', meaning: 'Voice', example: 'おおきな こえ。 (A loud voice.)' }
             ],
             'sa': [
                 { word: '魚', reading: 'さかな (sakana)', meaning: 'Fish', example: 'さかな を たべる。 (Eat fish.)' },
-                { word: '酒', reading: 'さけ (sake)', meaning: 'Sake/Alcohol', example: 'さけ を のむ。 (Drink sake.)' },
-                { word: '桜', reading: 'さくら (sakura)', meaning: 'Cherry Blossom', example: 'さくら が さいた。 (Cherry blossoms bloomed.)' }
+                { word: '桜', reading: 'さくら (sakura)', meaning: 'Cherry Blossom', example: 'さくら が さいた。 (Cherry blossoms bloomed.)' },
+                { word: '酒', reading: 'さけ (sake)', meaning: 'Alcohol', example: 'おさけ を のむ。 (Drink alcohol.)' }
             ],
             'shi': [
-                { word: '新聞', reading: 'しんぶん (shinbun)', meaning: 'Newspaper', example: 'しんぶん を よむ。 (Read the newspaper.)' },
-                { word: '仕事', reading: 'しごと (shigoto)', meaning: 'Work', example: 'しごと に いく。 (Go to work.)' },
-                { word: '写真', reading: 'しゃしん (shashin)', meaning: 'Photo', example: 'しゃしん を とる。 (Take a photo.)' }
+                { word: '写真', reading: 'しゃしん (shashin)', meaning: 'Photo', example: 'しゃしん を とる。 (Take a photo.)' },
+                { word: '白', reading: 'しろ (shiro)', meaning: 'White', example: 'しろい シャツ。 (White shirt.)' },
+                { word: '仕事', reading: 'しごと (shigoto)', meaning: 'Work', example: 'しごと に いく。 (Go to work.)' }
             ],
             'su': [
                 { word: '寿司', reading: 'すし (sushi)', meaning: 'Sushi', example: 'すし が すき です。 (I like sushi.)' },
-                { word: '少し', reading: 'すこし (sukoshi)', meaning: 'A little', example: 'すこし つかれました。 (I am a little tired.)' },
-                { word: '好き', reading: 'すき (suki)', meaning: 'Like', example: 'これ が すき です。 (I like this.)' }
+                { word: '好き', reading: 'すき (suki)', meaning: 'Like', example: 'あなた が すき です。 (I like you.)' },
+                { word: '少し', reading: 'すこし (sukoshi)', meaning: 'A little', example: 'すこし つかれました。 (I am a little tired.)' }
             ],
             'se': [
                 { word: '先生', reading: 'せんせい (sensei)', meaning: 'Teacher', example: 'せんせい に きく。 (Ask the teacher.)' },
-                { word: '生活', reading: 'せいかつ (seikatsu)', meaning: 'Life/Living', example: 'たのしい せいかつ。 (Fun life.)' },
-                { word: '背中', reading: 'せなか (senaka)', meaning: 'Back (body)', example: 'せなか が かゆい。 (My back is itchy.)' }
+                { word: '世界', reading: 'せかい (sekai)', meaning: 'World', example: 'せかい を りょこう する。 (Travel the world.)' },
+                { word: '背中', reading: 'せなか (senaka)', meaning: 'Back', example: 'せなか が かゆい。 (My back itches.)' }
             ],
             'so': [
                 { word: '空', reading: 'そら (sora)', meaning: 'Sky', example: 'あおい そら。 (Blue sky.)' },
-                { word: '外', reading: 'そと (soto)', meaning: 'Outside', example: 'そと に でる。 (Go outside.)' },
-                { word: '掃除', reading: 'そうじ (souji)', meaning: 'Cleaning', example: 'へや を そうじ する。 (Clean the room.)' }
+                { word: '掃除', reading: 'そうじ (souji)', meaning: 'Cleaning', example: 'へや を そうじ する。 (Clean the room.)' },
+                { word: '外', reading: 'そと (soto)', meaning: 'Outside', example: 'そと に でる。 (Go outside.)' }
             ],
             'ta': [
                 { word: '食べる', reading: 'たべる (taberu)', meaning: 'To eat', example: 'ごはん を たべる。 (Eat rice.)' },
-                { word: '高い', reading: 'たかい (takai)', meaning: 'High/Expensive', example: 'これ は たかい です。 (This is expensive.)' },
-                { word: '太陽', reading: 'たいよう (taiyou)', meaning: 'Sun', example: 'たいよう が のぼる。 (The sun rises.)' }
+                { word: '高い', reading: 'たかい (takai)', meaning: 'High/Expensive', example: 'この ほん は たかい。 (This book is expensive.)' },
+                { word: '卵', reading: 'たまご (tamago)', meaning: 'Egg', example: 'たまご を かう。 (Buy eggs.)' }
             ],
             'chi': [
                 { word: '地下鉄', reading: 'ちかてつ (chikatetsu)', meaning: 'Subway', example: 'ちかてつ に のる。 (Ride the subway.)' },
-                { word: '地図', reading: 'ちず (chizu)', meaning: 'Map', example: 'ちず を みる。 (Look at the map.)' },
-                { word: '父', reading: 'ちち (chichi)', meaning: 'Father', example: 'ちち は かいしゃいん です。 (My father is an office worker.)' }
+                { word: '小さい', reading: 'ちいさい (chiisai)', meaning: 'Small', example: 'ちいさい ねこ。 (Small cat.)' },
+                { word: '地図', reading: 'ちず (chizu)', meaning: 'Map', example: 'ちず を みる。 (Look at the map.)' }
             ],
             'tsu': [
                 { word: '月', reading: 'つき (tsuki)', meaning: 'Moon', example: 'つき が きれい です。 (The moon is beautiful.)' },
-                { word: '机', reading: 'つくえ (tsukue)', meaning: 'Desk', example: 'つくえ で べんきょう する。 (Study at the desk.)' },
-                { word: '強い', reading: 'つよい (tsuyoi)', meaning: 'Strong', example: 'かぜ が つよい。 (The wind is strong.)' }
+                { word: '机', reading: 'つくえ (tsukue)', meaning: 'Desk', example: 'つくえ の うえ。 (On the desk.)' },
+                { word: '作る', reading: 'つくる (tsukuru)', meaning: 'To make', example: 'りょうり を つくる。 (Cook food.)' }
             ],
             'te': [
                 { word: '手', reading: 'て (te)', meaning: 'Hand', example: 'て を あらう。 (Wash hands.)' },
-                { word: '天気', reading: 'てんき (tenki)', meaning: 'Weather', example: 'きょう は いい てんき です。 (Today is good weather.)' },
+                { word: '天気', reading: 'てんき (tenki)', meaning: 'Weather', example: 'いい てんき です。 (It is good weather.)' },
                 { word: '手紙', reading: 'てがみ (tegami)', meaning: 'Letter', example: 'てがみ を かく。 (Write a letter.)' }
             ],
             'to': [
-                { word: '時計', reading: 'とけい (tokei)', meaning: 'Clock/Watch', example: 'とけい を みる。 (Check the watch.)' },
-                { word: '友達', reading: 'ともだち (tomodachi)', meaning: 'Friend', example: 'ともだち と あそぶ。 (Play with a friend.)' },
-                { word: '図書館', reading: 'としょかん (toshokan)', meaning: 'Library', example: 'としょかん に いく。 (Go to the library.)' }
+                { word: '時計', reading: 'とけい (tokei)', meaning: 'Clock', example: 'とけい を みる。 (Check the watch.)' },
+                { word: '友達', reading: 'ともだち (tomodachi)', meaning: 'Friend', example: 'ともだち と あそぶ。 (Play with friends.)' },
+                { word: '鳥', reading: 'とり (tori)', meaning: 'Bird', example: 'とり が とぶ。 (Birds fly.)' }
             ],
             'na': [
                 { word: '名前', reading: 'なまえ (namae)', meaning: 'Name', example: 'なまえ を かく。 (Write your name.)' },
-                { word: '夏', reading: 'なつ (natsu)', meaning: 'Summer', example: 'なつ は あつい です。 (Summer is hot.)' },
-                { word: '中', reading: 'なか (naka)', meaning: 'Inside', example: 'はこ の なか。 (Inside the box.)' }
+                { word: '夏', reading: 'なつ (natsu)', meaning: 'Summer', example: 'なつ は あつい。 (Summer is hot.)' },
+                { word: '中', reading: 'なか (naka)', meaning: 'Inside', example: 'はこの なか。 (Inside the box.)' }
             ],
             'ni': [
                 { word: '日本', reading: 'にほん (nihon)', meaning: 'Japan', example: 'にほん に いきたい。 (I want to go to Japan.)' },
                 { word: '肉', reading: 'にく (niku)', meaning: 'Meat', example: 'にく を たべる。 (Eat meat.)' },
-                { word: '日曜日', reading: 'にちようび (nichiyoubi)', meaning: 'Sunday', example: 'あした は にちようび です。 (Tomorrow is Sunday.)' }
+                { word: '西', reading: 'にし (nishi)', meaning: 'West', example: 'にし の ほう。 (To the west.)' }
             ],
             'nu': [
-                { word: 'ぬいぐるみ', reading: 'ぬいぐるみ (nuigurumi)', meaning: 'Stuffed Animal', example: 'くま の ぬいぐるみ。 (Bear stuffed animal.)' },
-                { word: '盗む', reading: 'ぬすむ (nusumu)', meaning: 'To steal', example: 'さいふ を ぬすまれる。 (Wallet gets stolen.)' },
-                { word: 'ぬるい', reading: 'ぬるい (nurui)', meaning: 'Lukewarm', example: 'おゆ が ぬるい。 (The water is lukewarm.)' }
+                { word: 'ぬいぐるみ', reading: 'ぬいぐるみ (nuigurumi)', meaning: 'Plush Toy', example: 'くま の ぬいぐるみ。 (Bear plush toy.)' },
+                { word: '脱ぐ', reading: 'ぬぐ (nugu)', meaning: 'To take off', example: 'くつ を ぬぐ。 (Take off shoes.)' },
+                { word: '塗る', reading: 'ぬる (nuru)', meaning: 'To paint', example: 'ペンキ を ぬる。 (Paint with paint.)' }
             ],
             'ne': [
                 { word: '猫', reading: 'ねこ (neko)', meaning: 'Cat', example: 'ねこ が ねている。 (The cat is sleeping.)' },
@@ -563,38 +626,38 @@
             ],
             'no': [
                 { word: '飲み物', reading: 'のみもの (nomimono)', meaning: 'Drink', example: 'のみもの を かう。 (Buy a drink.)' },
-                { word: '乗り物', reading: 'のりもの (norimono)', meaning: 'Vehicle', example: 'のりもの に のる。 (Ride a vehicle.)' },
-                { word: '喉', reading: 'のど (nodo)', meaning: 'Throat', example: 'のど が かわいた。 (I am thirsty.)' }
+                { word: '海苔', reading: 'のり (nori)', meaning: 'Seaweed', example: 'のり を たべる。 (Eat seaweed.)' },
+                { word: '登る', reading: 'のぼる (noboru)', meaning: 'To climb', example: 'やま に のぼる。 (Climb a mountain.)' }
             ],
             'ha': [
                 { word: '花', reading: 'はな (hana)', meaning: 'Flower', example: 'はな が さく。 (Flowers bloom.)' },
                 { word: '春', reading: 'はる (haru)', meaning: 'Spring', example: 'はる に なる。 (It becomes spring.)' },
-                { word: '晴れ', reading: 'はれ (hare)', meaning: 'Sunny', example: 'あした は はれ です。 (Tomorrow will be sunny.)' }
+                { word: '晴れ', reading: 'はれ (hare)', meaning: 'Sunny', example: 'きょう は はれ です。 (Today is sunny.)' }
             ],
             'hi': [
-                { word: '人', reading: 'ひと (hito)', meaning: 'Person', example: 'やさしい ひと。 (A kind person.)' },
                 { word: '飛行機', reading: 'ひこうき (hikouki)', meaning: 'Airplane', example: 'ひこうき で いく。 (Go by plane.)' },
+                { word: '人', reading: 'ひと (hito)', meaning: 'Person', example: 'あの ひと は だれ？ (Who is that person?)' },
                 { word: '昼', reading: 'ひる (hiru)', meaning: 'Noon/Daytime', example: 'ひるごはん を たべる。 (Eat lunch.)' }
             ],
             'fu': [
                 { word: '冬', reading: 'ふゆ (fuyu)', meaning: 'Winter', example: 'ふゆ は さむい です。 (Winter is cold.)' },
-                { word: '服', reading: 'ふく (fuku)', meaning: 'Clothes', example: 'ふく を かう。 (Buy clothes.)' },
-                { word: '富士山', reading: 'ふじさん (fujisan)', meaning: 'Mt. Fuji', example: 'ふじさん は たかい。 (Mt. Fuji is high.)' }
+                { word: '服', reading: 'ふく (fuku)', meaning: 'Clothes', example: 'あたらしい ふく。 (New clothes.)' },
+                { word: '風呂', reading: 'ふろ (furo)', meaning: 'Bath', example: 'おふろ に はいる。 (Take a bath.)' }
             ],
             'he': [
                 { word: '部屋', reading: 'へや (heya)', meaning: 'Room', example: 'へや を かたづける。 (Clean the room.)' },
-                { word: '平和', reading: 'へいわ (heiwa)', meaning: 'Peace', example: 'せかい の へいわ。 (World peace.)' },
-                { word: '下手', reading: 'へた (heta)', meaning: 'Unskilled', example: 'うた が へた です。 (I am bad at singing.)' }
+                { word: '下手', reading: 'へた (heta)', meaning: 'Unskilled', example: 'うた が へた です。 (I am bad at singing.)' },
+                { word: '平和', reading: 'へいわ (heiwa)', meaning: 'Peace', example: 'せかい の へいわ。 (World peace.)' }
             ],
             'ho': [
                 { word: '本', reading: 'ほん (hon)', meaning: 'Book', example: 'ほん を よむ。 (Read a book.)' },
-                { word: '星', reading: 'ほし (hoshi)', meaning: 'Star', example: 'ほし が ひかる。 (Stars shine.)' },
+                { word: '星', reading: 'ほし (hoshi)', meaning: 'Star', example: 'ほし が ひかる。 (Stars are shining.)' },
                 { word: '欲しい', reading: 'ほしい (hoshii)', meaning: 'Want', example: 'みず が ほしい。 (I want water.)' }
             ],
             'ma': [
                 { word: '毎日', reading: 'まいにち (mainichi)', meaning: 'Every day', example: 'まいにち べんきょう する。 (Study every day.)' },
-                { word: '前', reading: 'まえ (mae)', meaning: 'Front/Before', example: 'いえ の まえ。 (In front of the house.)' },
-                { word: '窓', reading: 'まど (mado)', meaning: 'Window', example: 'まど を あける。 (Open the window.)' }
+                { word: '前', reading: 'まえ (mae)', meaning: 'Front/Before', example: 'えき の まえ。 (In front of the station.)' },
+                { word: '町', reading: 'まち (machi)', meaning: 'Town', example: 'しずかな まち。 (A quiet town.)' }
             ],
             'mi': [
                 { word: '店', reading: 'みせ (mise)', meaning: 'Shop', example: 'みせ に いく。 (Go to the shop.)' },
@@ -603,18 +666,18 @@
             ],
             'mu': [
                 { word: '虫', reading: 'むし (mushi)', meaning: 'Insect', example: 'むし が いる。 (There is an insect.)' },
-                { word: '村', reading: 'むら (mura)', meaning: 'Village', example: 'ちいさな むら。 (Small village.)' },
-                { word: '昔', reading: 'むかし (mukashi)', meaning: 'Long ago', example: 'むかし むかし... (Once upon a time...)' }
+                { word: '昔', reading: 'むかし (mukashi)', meaning: 'Old times', example: 'むかし むかし。 (Once upon a time.)' },
+                { word: '難しい', reading: 'むずかしい (muzukashii)', meaning: 'Difficult', example: 'にほんご は むずかしい。 (Japanese is difficult.)' }
             ],
             'me': [
                 { word: '目', reading: 'め (me)', meaning: 'Eye', example: 'め が かゆい。 (My eyes are itchy.)' },
-                { word: '眼鏡', reading: 'めがね (megane)', meaning: 'Glasses', example: 'めがね を かける。 (Wear glasses.)' },
-                { word: '名刺', reading: 'めいし (meishi)', meaning: 'Business Card', example: 'めいし を こうかん する。 (Exchange business cards.)' }
+                { word: '眼鏡', reading: 'めがね (megane)', meaning: 'Glasses', example: 'めがね を かける。 (Put on glasses.)' },
+                { word: '名刺', reading: 'めいし (meishi)', meaning: 'Business card', example: 'めいし を こうかん する。 (Exchange business cards.)' }
             ],
             'mo': [
                 { word: '森', reading: 'もり (mori)', meaning: 'Forest', example: 'もり に いく。 (Go to the forest.)' },
-                { word: '物', reading: 'もの (mono)', meaning: 'Thing', example: 'おいしい もの。 (Delicious thing.)' },
-                { word: 'もしもし', reading: 'もしもし (moshimoshi)', meaning: 'Hello (phone)', example: 'もしもし、げんき ですか？ (Hello, are you well?)' }
+                { word: '物', reading: 'もの (mono)', meaning: 'Thing', example: 'おいしい もの。 (Delicious things.)' },
+                { word: 'もしもし', reading: 'もしもし (moshimoshi)', meaning: 'Hello (phone)', example: 'もしもし、たなか です。 (Hello, this is Tanaka.)' }
             ],
             'ya': [
                 { word: '山', reading: 'やま (yama)', meaning: 'Mountain', example: 'やま に のぼる。 (Climb a mountain.)' },
@@ -624,22 +687,22 @@
             'yu': [
                 { word: '雪', reading: 'ゆき (yuki)', meaning: 'Snow', example: 'ゆき が ふる。 (Snow falls.)' },
                 { word: '夢', reading: 'ゆめ (yume)', meaning: 'Dream', example: 'ゆめ を みる。 (Have a dream.)' },
-                { word: 'ゆっくり', reading: 'ゆっくり (yukkuri)', meaning: 'Slowly', example: 'ゆっくり はなして ください。 (Please speak slowly.)' }
+                { word: '有名', reading: 'ゆうめい (yuumei)', meaning: 'Famous', example: 'ゆうめいな ひと。 (A famous person.)' }
             ],
             'yo': [
                 { word: '夜', reading: 'よる (yoru)', meaning: 'Night', example: 'よる に なる。 (It becomes night.)' },
                 { word: '読む', reading: 'よむ (yomu)', meaning: 'To read', example: 'ほん を よむ。 (Read a book.)' },
-                { word: '洋服', reading: 'ようふく (youfuku)', meaning: 'Western clothes', example: 'ようふく を きる。 (Wear western clothes.)' }
+                { word: '洋服', reading: 'ようふく (youfuku)', meaning: 'Western clothes', example: 'ようふく を かう。 (Buy western clothes.)' }
             ],
             'ra': [
                 { word: '来週', reading: 'らいしゅう (raishuu)', meaning: 'Next week', example: 'らいしゅう あいましょう。 (Let\'s meet next week.)' },
                 { word: 'ラーメン', reading: 'らーめん (raamen)', meaning: 'Ramen', example: 'ラーメン を たべる。 (Eat ramen.)' },
-                { word: '楽', reading: 'らく (raku)', meaning: 'Comfortable/Easy', example: 'らく に して ください。 (Please make yourself comfortable.)' }
+                { word: 'ラジオ', reading: 'らじお (rajio)', meaning: 'Radio', example: 'ラジオ を きく。 (Listen to the radio.)' }
             ],
             'ri': [
-                { word: '林檎', reading: 'りんご (ringo)', meaning: 'Apple', example: 'りんご を たべる。 (Eat an apple.)' },
                 { word: '料理', reading: 'りょうり (ryouri)', meaning: 'Cooking', example: 'りょうり を つくる。 (Cook food.)' },
-                { word: '旅行', reading: 'りょこう (ryokou)', meaning: 'Travel', example: 'りょこう に いく。 (Go on a trip.)' }
+                { word: '林檎', reading: 'りんご (ringo)', meaning: 'Apple', example: 'あかい りんご。 (Red apple.)' },
+                { word: '旅行', reading: 'りょこう (ryokou)', meaning: 'Travel', example: 'にほん へ りょこう する。 (Travel to Japan.)' }
             ],
             'ru': [
                 { word: '留守', reading: 'るす (rusu)', meaning: 'Not at home', example: 'ちち は るす です。 (My father is not home.)' },
@@ -649,38 +712,69 @@
             're': [
                 { word: '冷蔵庫', reading: 'れいぞうこ (reizouko)', meaning: 'Refrigerator', example: 'れいぞうこ に いれる。 (Put in the refrigerator.)' },
                 { word: '練習', reading: 'れんしゅう (renshuu)', meaning: 'Practice', example: 'ピアノ を れんしゅう する。 (Practice piano.)' },
-                { word: '歴史', reading: 'れきし (rekishi)', meaning: 'History', example: 'れきし を べんきょう する。 (Study history.)' }
+                { word: 'レストラン', reading: 'れすとらん (resutoran)', meaning: 'Restaurant', example: 'レストラン で たべる。 (Eat at a restaurant.)' }
             ],
             'ro': [
                 { word: '六', reading: 'ろく (roku)', meaning: 'Six', example: 'りんご が ろっこ ある。 (There are six apples.)' },
                 { word: '廊下', reading: 'ろうか (rouka)', meaning: 'Corridor', example: 'ろうか を はしらない。 (Do not run in the corridor.)' },
-                { word: '老人', reading: 'ろうじん (roujin)', meaning: 'Elderly person', example: 'ろうじん に しんせつ に する。 (Be kind to the elderly.)' }
+                { word: 'ろうそく', reading: 'ろうそく (rousoku)', meaning: 'Candle', example: 'ろうそく を つける。 (Light a candle.)' }
             ],
             'wa': [
                 { word: '私', reading: 'わたし (watashi)', meaning: 'I/Me', example: 'わたし は ガク です。 (I am Gaku.)' },
-                { word: '忘れる', reading: 'わすれる (wasureru)', meaning: 'To forget', example: 'しゅくだい を わすれた。 (I forgot my homework.)' },
-                { word: '笑う', reading: 'わらう (warau)', meaning: 'To laugh', example: 'おおきく わらう。 (Laugh loudly.)' }
+                { word: '和食', reading: 'わしょく (washoku)', meaning: 'Japanese food', example: 'わしょく が すき です。 (I like Japanese food.)' },
+                { word: '忘れ物', reading: 'わすれもの (wasuremono)', meaning: 'Lost article', example: 'わすれもの に ちゅうい。 (Be careful of lost items.)' }
             ],
             'wo': [
                 { word: 'を', reading: 'を (wo)', meaning: 'Object particle', example: 'これ を ください。 (Please give me this.)' },
-                // 'Wo' is rarely start of word, usually particle.
+                { word: '〜を', reading: '〜を (wo)', meaning: 'Particle', example: 'みず を のむ。 (Drink water.)' }
             ],
             'n': [
                 { word: '運', reading: 'うん (un)', meaning: 'Luck', example: 'うん が いい。 (Good luck.)' },
-                // N usually ends words, but we can list words containing it significantly or just concepts.
+                { word: '運動', reading: 'うんどう (undou)', meaning: 'Exercise', example: 'まいにち うんどう する。 (Exercise every day.)' },
+                { word: '運転', reading: 'うんてん (unten)', meaning: 'Driving', example: 'くるま の うんてん。 (Driving a car.)' }
             ]
         };
 
-        // --- 2. State ---
+        let VOCAB_DB = JSON.parse(JSON.stringify(DEFAULT_VOCAB));
+
+        // Load local storage and merge with defaults
+        try {
+            const stored = localStorage.getItem('neon_gojuon_vocab');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                // Merge: If local has keys, append/replace.
+                Object.keys(parsed).forEach(key => {
+                    if (VOCAB_DB[key]) {
+                        // Ensure we have unique items based on 'word'
+                        const existingWords = new Set(VOCAB_DB[key].map(i => i.word));
+                        parsed[key].forEach(newItem => {
+                            if (!existingWords.has(newItem.word)) {
+                                VOCAB_DB[key].push(newItem);
+                            }
+                        });
+                    } else {
+                        VOCAB_DB[key] = parsed[key];
+                    }
+                });
+                console.log("Merged vocabulary from local storage.");
+            }
+        } catch (e) {
+            console.error("Failed to load local storage", e);
+        }
+
+        // --- 3. State ---
         const state = {
             mode: 'BOTH',
             selectedChar: null,
-            isGenerating: false,
+            activeCellId: null,
+            activeCellRect: null,
             vocabulary: null,
-            error: null
+            vocabIndex: -1, // Track index to ensure rotation
+            error: null,
+            isPanelOpen: false
         };
 
-        // --- 3. Render Logic ---
+        // --- 4. Render Logic ---
         const gridRoot = document.getElementById('grid-root');
         const infoPanel = document.getElementById('info-panel');
         const panelContent = document.getElementById('panel-content');
@@ -689,7 +783,7 @@
         // Initial Render
         function initGrid() {
             gridRoot.innerHTML = '';
-            // Chunk into columns of 5
+            // Chunk into columns of 5 (Standard Vertical Layout)
             for (let i = 0; i < GOJUON_DATA.length; i += 5) {
                 const chunk = GOJUON_DATA.slice(i, i + 5);
                 const col = document.createElement('div');
@@ -697,16 +791,27 @@
                 
                 chunk.forEach(char => {
                     const cell = document.createElement('div');
+                    cell.className = 'cell'; // Base class for everyone for identical box model
+
                     if (char.type === 'empty') {
-                        cell.style.width = '3.5rem';
-                        cell.style.height = '3.5rem';
+                        cell.classList.add('empty-cell');
                     } else {
-                        cell.className = 'cell';
                         cell.id = `cell-${char.id}`;
-                        // Stop propagation so clicking a cell doesn't immediately close the panel
+                        
+                        // Local Mouse Tracking for Glow Effect (on the individual cell)
+                        cell.onmousemove = (e) => {
+                            const rect = cell.getBoundingClientRect();
+                            const x = e.clientX - rect.left;
+                            const y = e.clientY - rect.top;
+                            cell.style.setProperty('--x', `${x}px`);
+                            cell.style.setProperty('--y', `${y}px`);
+                        };
+
+                        // Interaction
                         cell.onclick = (e) => {
                             e.stopPropagation();
-                            selectChar(char);
+                            if (state.isPanelOpen) return;
+                            openPanel(char, cell);
                         };
                         
                         // Main Text
@@ -744,48 +849,111 @@
                     main.textContent = char.hiragana;
                     sub.textContent = char.katakana;
                 }
-
-                // Active State
-                if (state.selectedChar && state.selectedChar.id === char.id) {
-                    cell.classList.add('active');
-                } else {
-                    cell.classList.remove('active');
-                }
             });
         }
 
-        function updatePanel() {
-            // Visibility
-            if (!state.selectedChar) {
-                infoPanel.classList.remove('show');
-                return;
-            }
+        // --- 5. Panel Animation Logic ---
+        
+        function openPanel(char, cellElement) {
+            state.selectedChar = char;
+            state.vocabulary = null;
+            state.vocabIndex = -1;
+            state.error = null;
+            state.activeCellId = cellElement.id;
+            state.isPanelOpen = true;
 
-            infoPanel.classList.add('show');
+            // 1. Measure the cell
+            const rect = cellElement.getBoundingClientRect();
+            state.activeCellRect = rect;
 
-            // Content
+            // 2. Hide the cell (placeholder state)
+            cellElement.classList.add('placeholder');
+
+            // 3. Set initial position of panel to match cell
+            infoPanel.style.display = 'block';
+            infoPanel.style.borderRadius = getComputedStyle(cellElement).borderRadius;
+            infoPanel.style.top = `${rect.top}px`;
+            infoPanel.style.left = `${rect.left}px`;
+            infoPanel.style.width = `${rect.width}px`;
+            infoPanel.style.height = `${rect.height}px`;
+            infoPanel.style.transform = 'none';
+
+            // 4. Force reflow
+            infoPanel.offsetHeight;
+
+            // 5. Animate to center
+            const targetWidth = Math.min(window.innerWidth * 0.9, 800);
+            const targetHeight = 300;
+            
+            infoPanel.classList.add('open');
+            
+            infoPanel.style.top = '50%';
+            infoPanel.style.left = '50%';
+            infoPanel.style.width = `${targetWidth}px`;
+            infoPanel.style.height = `${targetHeight}px`;
+            infoPanel.style.transform = 'translate(-50%, -50%)';
+            infoPanel.style.borderRadius = '1.5rem';
+
+            // 6. Render content
+            renderPanelContent();
+        }
+
+        function closePanel() {
+            if (!state.isPanelOpen || !state.activeCellRect) return;
+
+            infoPanel.classList.remove('open');
+            state.isPanelOpen = false;
+
+            const rect = state.activeCellRect;
+            infoPanel.style.top = `${rect.top}px`;
+            infoPanel.style.left = `${rect.left}px`;
+            infoPanel.style.width = `${rect.width}px`;
+            infoPanel.style.height = `${rect.height}px`;
+            infoPanel.style.transform = 'none';
+            infoPanel.style.borderRadius = '0.75rem';
+
+            setTimeout(() => {
+                infoPanel.style.display = 'none';
+                
+                const cell = document.getElementById(state.activeCellId);
+                if (cell) {
+                    cell.classList.remove('placeholder');
+                }
+                
+                state.selectedChar = null;
+                state.activeCellId = null;
+            }, 300); // Faster close animation match
+        }
+
+        function renderPanelContent() {
             panelContent.innerHTML = '';
 
-            if (state.isGenerating) {
-                // Loading View
-                panelContent.innerHTML = `
-                    <div class="loading-view">
-                        <div style="font-size:10px; letter-spacing:2px; color:var(--neon-pink);">ACCESSING NEURAL ARCHIVE...</div>
-                        <div class="pulse-bar"><div class="pulse-fill"></div></div>
-                    </div>
+            // Button Logic
+            let btnHtml = '';
+            if (state.vocabulary) {
+                // Refresh Icon
+                btnHtml = `
+                    <button class="btn-action" id="btn-action-trigger" title="Another Example">
+                        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                    </button>
                 `;
-            } else if (state.error) {
-                // Error View
+            } else if (state.selectedChar) {
+                // Example Button
+                btnHtml = `<button class="btn-action" id="btn-action-trigger">例</button>`;
+            }
+
+            if (state.error) {
                 panelContent.innerHTML = `
+                    ${btnHtml}
                     <div class="error-view">
                         <div style="border:1px solid var(--neon-pink); padding:2px 6px; font-size:10px; color:var(--neon-pink);">SYSTEM WARNING</div>
                         <div style="font-weight:300;">${state.error}</div>
                     </div>
                 `;
             } else if (state.vocabulary) {
-                // Vocabulary View
                 const v = state.vocabulary;
                 panelContent.innerHTML = `
+                    ${btnHtml}
                     <div class="vocab-view">
                         <div class="vocab-header">
                             <div>
@@ -800,11 +968,10 @@
                         <div class="vocab-example">"${v.example}"</div>
                     </div>
                 `;
-            } else {
-                // Default Char View
+            } else if (state.selectedChar) {
                 const c = state.selectedChar;
                 panelContent.innerHTML = `
-                    <button class="btn-example" id="btn-example-trigger">例</button>
+                    ${btnHtml}
                     <div class="char-view">
                         <div class="char-group">
                             <span class="char-label">HIRAGANA</span>
@@ -818,25 +985,18 @@
                         <div class="divider"></div>
                         <div class="char-group">
                             <span class="char-label" style="color:var(--neon-blue);">ROMAJI</span>
-                            <span class="char-val" style="font-size:3rem; font-family:var(--font-mono);">${c.romaji}</span>
+                            <span class="char-val" style="font-size:3rem; font-family:var(--font-mono); font-weight:400;">${c.romaji}</span>
                         </div>
                     </div>
                 `;
             }
         }
 
-        // --- 4. Interactions ---
-        function selectChar(char) {
-            state.selectedChar = char;
-            state.vocabulary = null;
-            state.error = null;
-            updateGridVisuals();
-            updatePanel();
-        }
-
+        // --- 6. Interactions ---
         modeBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                e.stopPropagation(); // Stop clicking header from closing panel
+                e.stopPropagation();
+                if(state.isPanelOpen) closePanel();
                 modeBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 state.mode = btn.dataset.mode;
@@ -844,53 +1004,49 @@
             });
         });
 
-        // Click outside to close
         window.addEventListener('click', (e) => {
-            // If the click is NOT inside the panel and NOT inside a cell (cell is handled by stopPropagation)
-            if (!infoPanel.contains(e.target)) {
-                state.selectedChar = null;
-                updateGridVisuals();
-                updatePanel();
+            if (state.isPanelOpen && !infoPanel.contains(e.target)) {
+                closePanel();
             }
         });
 
-        // Event delegation for the dynamic Example button
         panelContent.addEventListener('click', (e) => {
-            if (e.target.closest('#btn-example-trigger')) {
+            if (e.target.closest('#btn-action-trigger')) {
                 e.stopPropagation();
-                generateVocab();
+                // Fetch from LOCAL DB.
+                displayLocalVocab();
             }
         });
 
-        // --- 5. OFFLINE LOGIC ---
-        function generateVocab() {
+        // --- 7. LOGIC ---
+        
+        // Displays a random vocabulary from the LOCAL database
+        function displayLocalVocab() {
             if (!state.selectedChar) return;
             
-            state.isGenerating = true;
-            state.vocabulary = null;
-            state.error = null;
-            updatePanel();
+            const charId = state.selectedChar.id;
+            const vocabList = VOCAB_DB[charId];
 
-            // Simulate "Network/Processing" delay for effect
-            setTimeout(() => {
-                try {
-                    const charId = state.selectedChar.id;
-                    const vocabList = VOCAB_DB[charId];
-
-                    if (vocabList && vocabList.length > 0) {
-                        // Pick random word
-                        const randomIndex = Math.floor(Math.random() * vocabList.length);
-                        state.vocabulary = vocabList[randomIndex];
-                    } else {
-                        state.error = "No data found in local archive.";
-                    }
-                } catch (e) {
-                    state.error = "Data access error.";
-                } finally {
-                    state.isGenerating = false;
-                    updatePanel();
+            if (vocabList && vocabList.length > 0) {
+                // Logic to pick a random index but try to change it if possible
+                let newIndex;
+                if (vocabList.length === 1) {
+                    newIndex = 0;
+                } else {
+                    // Pick random, avoid current if possible
+                    do {
+                        newIndex = Math.floor(Math.random() * vocabList.length);
+                    } while (newIndex === state.vocabIndex && vocabList.length > 1);
                 }
-            }, 600); // 600ms artificial delay
+
+                state.vocabIndex = newIndex;
+                state.vocabulary = vocabList[newIndex];
+                state.error = null;
+            } else {
+                state.error = "No data found.";
+                state.vocabulary = null;
+            }
+            renderPanelContent();
         }
 
         initGrid();
