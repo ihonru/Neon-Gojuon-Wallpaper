@@ -1,6 +1,8 @@
 # Neon Gojuon Wallpaper | 霓虹五十音动态壁纸
 
-![Neon Gojuon Banner](banner.png)
+<div align="center">
+  <img src="./banner.png" alt="Neon Gojuon Banner" width="100%" />
+</div>
 
 **A stylish, cyberpunk-inspired interactive Japanese 50-sound table (Gojuon) designed for Lively Wallpaper.**
 **专为 Lively Wallpaper 设计的赛博朋克风格交互式日语五十音动态壁纸。**
