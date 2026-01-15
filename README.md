@@ -1,8 +1,6 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
-
 # Neon Gojuon Wallpaper | 霓虹五十音动态壁纸
+
+![Neon Gojuon Banner](banner.svg)
 
 **A stylish, cyberpunk-inspired interactive Japanese 50-sound table (Gojuon) designed for Lively Wallpaper.**
 **专为 Lively Wallpaper 设计的赛博朋克风格交互式日语五十音动态壁纸。**
