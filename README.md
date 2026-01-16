@@ -1,7 +1,7 @@
 # Neon Gojuon Wallpaper | 霓虹五十音动态壁纸
 
 <div align="center">
-  <img src="./Bananer.png" alt="Neon Gojuon Banner" width="100%" />
+  <img src="./Banner.png" alt="Neon Gojuon Banner" width="100%" />
   <br/><br/>
 </div>
 
